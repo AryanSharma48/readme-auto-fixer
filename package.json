@@ -1,0 +1,20 @@
+{
+  "name": "readme-auto-fixer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AryanSharma48/readme-auto-fixer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AryanSharma48/readme-auto-fixer/issues"
+  },
+  "homepage": "https://github.com/AryanSharma48/readme-auto-fixer#readme"
+}
