@@ -1,5 +1,34 @@
 const fs = require("fs");
 
+function getDefaultContent(section) {
+    switch (section) {
+        case "description":
+            return "A brief description of your project, its purpose, and what problem it solves.";
+
+        case "installation":
+            return "Follow these steps to install the project locally:\n\n```bash\nnpm install\n```";
+
+        case "usage":
+            return "Run the following command to start the project:\n\n```bash\nnpm start\n```";
+
+        case "dependencies":
+            return "This project depends on the following packages:\n\n- List dependencies here";
+
+        case "folder structure":
+            return "Project structure:\n\n```\nsrc/\n  ├── index.js\n  └── ...\n```";
+
+        case "license":
+            return "This project is licensed under the MIT License.";
+
+        case "built by":
+            const username = process.env.GITHUB_ACTOR || "Aryan Sharma";
+            return `Built with ❤️ by @${username}`;
+
+        default:
+            return "";
+    }
+}
+
 try{
     const data = fs.readFileSync("README.md", "utf-8");
     const sections = data.split("## ");
@@ -20,13 +49,12 @@ try{
     "usage",
     "dependencies",
     "folder structure",
-    "license",
     "built by"
     ];
 
     requiredSections.forEach(section => {
         if(!(section in sectionMap))
-            {sectionMap[section] = "TODO: Add content here";}    
+            {sectionMap[section] = getDefaultContent(section);}    
     });
 
     function formatTitle(title) {
