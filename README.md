@@ -2,23 +2,23 @@
 A brief description of your project, its purpose, and what problem it solves.
 
 ## Installation
-Follow these steps to install the project locally:
+Follow these steps to install the project:
 
 ```bash
 npm install
 ```
 
 ## Usage
-Run the following command to start the project:
+Run the project using:
 
 ```bash
 npm start
 ```
 
 ## Dependencies
-This project depends on the following packages:
+This project uses the following dependencies:
 
-- List dependencies here
+- express
 
 ## Folder Structure
 Project structure:
@@ -30,5 +30,5 @@ src/
 ```
 
 ## Built By
-Built with ❤️ by @your-username
+Built with ❤️ by @Aryan Sharma
 
