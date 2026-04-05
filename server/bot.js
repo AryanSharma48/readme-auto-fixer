@@ -112,15 +112,18 @@ function buildFileTree(treeData, maxDepth = 4) {
         }
 
         const parts = item.path.split("/");
-        const depth = Math.min(parts.length, maxDepth);
+        
+        if (parts.length > maxDepth) {
+            continue;
+        }
+
         let current = fileTree;
 
-        for (let i = 0; i < depth; i++) {
+        for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
-            const isLastLevel = i === depth - 1;
-            const isActualFile = i === parts.length - 1 && item.type === "blob";
+            const isFile = i === parts.length - 1 && item.type === "blob";
 
-            if (isLastLevel && isActualFile) {
+            if (isFile) {
                 current[part] = null;
             } else {
                 if (!current[part]) {
