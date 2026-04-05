@@ -1,6 +1,6 @@
 ## Description
 
-diglet is a Node.js application. Add a brief description of its purpose and what problem it solves.
+blytz is a Node.js application. Add a brief description of its purpose and what problem it solves.
 
 ## Installation
 
@@ -15,6 +15,8 @@ npm install
 You can run the following scripts:
 
 - `npm start`
+- `npm run prepublishOnly`
+- `npm run postpublish`
 
 ## Dependencies
 
@@ -33,11 +35,14 @@ Project structure:
 ├── .env
 ├── .gitignore
 ├── bin
-│   └── cli.js
+│   ├── cli.js
+│   └── README-NPM.md
 ├── LICENSE
 ├── package-lock.json
 ├── package.json
 ├── README.md
+├── scripts
+│   └── sync-readme.js
 ├── server
 │   ├── analytics.js
 │   ├── bot.js

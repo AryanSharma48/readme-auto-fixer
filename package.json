@@ -17,10 +17,6 @@
     "prepublishOnly": "node scripts/sync-readme.js prepublish",
     "postpublish": "node scripts/sync-readme.js postpublish"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AryanSharma48/readme-auto-fixer.git"
-  },
   "keywords": [
     "blytz",
     "cli",
