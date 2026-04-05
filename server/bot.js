@@ -8,9 +8,9 @@ export async function runBot(payload) {
         const repo = payload.repository.name;
 
         const octokit = await getOctokit(installationId);
-        console.log("Octokit keys:", Object.keys(octokit));
 
-        const { data } = await octokit.rest.repos.getContent({
+        // Fetch README
+        const { data } = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
             owner,
             repo,
             path: "README.md",
@@ -20,22 +20,18 @@ export async function runBot(payload) {
 
         // Try to load package.json for context
         let packageJson = null;
-
         try {
-            const pkg = await octokit.rest.repos.getContent({
+            const pkg = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
                 owner,
                 repo,
                 path: "package.json",
             });
-
-            packageJson = JSON.parse(
-                Buffer.from(pkg.data.content, "base64").toString()
-            );
+            packageJson = JSON.parse(Buffer.from(pkg.data.content, "base64").toString());
         } catch { }
 
         const context = {
             packageJson,
-            fileTree: null, // later upgrade
+            fileTree: null,
             username: owner,
         };
 
@@ -48,7 +44,7 @@ export async function runBot(payload) {
         }
 
         // Commit updated README back to repo
-        await octokit.rest.repos.createOrUpdateFileContents({
+        await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
             owner,
             repo,
             path: "README.md",
