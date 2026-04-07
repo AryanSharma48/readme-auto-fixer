@@ -7,19 +7,13 @@
 - Updates an existing `README.md`
 - Creates a new `README.md` with `--init`
 - Replaces an existing `README.md` with `--force`
-- Reads `package.json` to build README sections automatically
+- Reads `package.json` / `requirements.txt` to build README sections automatically
 - Generates a basic folder tree for the project structure section
 
 ## Install
 
 ```bash
 npm install -g blytz
-```
-
-If you are developing locally from this repository, you can link it instead:
-
-```bash
-npm link
 ```
 
 ## Usage
@@ -96,9 +90,9 @@ blytz
 
 ## Notes
 
-- The CLI expects to run in a folder that contains `package.json`
+- The CLI expects to run in a folder that contains `package.json` or `requirements.txt`
 - The CLI reads the local `README.md` in the current directory
-- The folder tree excludes `node_modules` and `.git`
+- The folder tree excludes `node_modules` and `.git` and any folder that might be in `.gitignore`
 
 ## License
 

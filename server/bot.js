@@ -1,5 +1,13 @@
 import { getOctokit } from "./github.js";
 import processReadme from "../src/processReadme.js";
+import {
+    buildRemoteFileTree,
+    collectNodeDependencies,
+    collectPythonDependencies,
+    collectScripts,
+    getLicenseName,
+    parseGitignoreContent
+} from "../src/readmeContext.js";
 
 async function findProjectFiles(octokit, owner, repo) {
     try {
@@ -72,6 +80,21 @@ async function fetchRequirementsFile(octokit, owner, repo, path) {
     }
 }
 
+async function fetchGitignoreFile(octokit, owner, repo, gitignorePath) {
+    try {
+        const { data } = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
+            owner,
+            repo,
+            path: gitignorePath,
+        });
+        const content = Buffer.from(data.content, "base64").toString();
+        return { path: gitignorePath, content, error: null };
+    } catch (err) {
+        console.warn(`Failed to fetch ${gitignorePath}:`, err.message);
+        return { path: gitignorePath, content: null, error: err.message };
+    }
+}
+
 function findLicensePath(treeData) {
     const licenseEntry = treeData?.tree?.find(item =>
         item.type === "blob" &&
@@ -79,15 +102,6 @@ function findLicensePath(treeData) {
     );
 
     return licenseEntry?.path || null;
-}
-
-function getLicenseName(licenseContent) {
-    const firstLine = licenseContent
-        .split(/\r?\n/)
-        .map(line => line.trim())
-        .find(Boolean);
-
-    return firstLine || "";
 }
 
 async function fetchLicenseName(octokit, owner, repo, treeData) {
@@ -112,119 +126,26 @@ async function fetchLicenseName(octokit, owner, repo, treeData) {
     }
 }
 
-function aggregateDependencies(packages) {
-    const ignoreList = [
-        'eslint', 'prettier', 'husky', 'lint-staged', 'stylelint',
-        'typescript', 'vite', 'webpack', 'rollup', 'parcel', 'esbuild',
-        'babel', 'tsc', 'ts-node', 'tsx', 'nodemon', 'concurrently',
-        'jest', 'mocha', 'chai', 'vitest', 'cypress', 'playwright', 'supertest',
-        'postcss', 'autoprefixer', 'sass', 'less', 'dotenv', 'cross-env', 'rimraf',
-        'black', 'flake8', 'pylint', 'mypy', 'isort', 'autopep8', 'bandit',
-        'pytest', 'coverage', 'tox', 'mock', 'hypothesis', 'pytest-cov',
-        'setuptools', 'wheel', 'twine', 'build',
-        'python-dotenv', 'pip-tools', 'virtualenv', 'pre-commit'
-    ];
+async function fetchGitignoreRules(octokit, owner, repo, treeData) {
+    const gitignorePaths = (treeData?.tree || [])
+        .filter(item => item.type === "blob" && item.path.endsWith(".gitignore"))
+        .map(item => item.path)
+        .sort((left, right) => left.split("/").length - right.split("/").length || left.localeCompare(right));
 
-    const depsSet = new Set();
-
-    for (const pkg of packages) {
-        const { content } = pkg;
-        if (content?.dependencies) {
-            Object.keys(content.dependencies).forEach(dep => {
-                if (dep.startsWith('@types/')) return;
-                if (dep.startsWith('@babel/')) return;
-                if (dep.startsWith('@vitejs/')) return;
-                if (dep.startsWith('types-')) return;
-                if (ignoreList.includes(dep)) return;
-                depsSet.add(dep);
-            });
-        }
+    if (gitignorePaths.length === 0) {
+        return [];
     }
 
-    return Array.from(depsSet).sort();
-}
+    const gitignoreFiles = await Promise.all(
+        gitignorePaths.map(gitignorePath => fetchGitignoreFile(octokit, owner, repo, gitignorePath))
+    );
 
-function aggregatePythonDependencies(requirementFiles) {
-    const depsSet = new Set();
-
-    for (const file of requirementFiles) {
-        if (!file?.content) continue;
-
-        file.content
-            .split(/\r?\n/)
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith("#"))
-            .filter(line => !line.startsWith("-"))
-            .map(line => line.split(";")[0].trim())
-            .map(line => line.split(/[=<>!~]/)[0].trim())
-            .filter(Boolean)
-            .forEach(dep => depsSet.add(dep));
-    }
-
-    return Array.from(depsSet).sort();
-}
-
-function buildFileTree(treeData, maxDepth = 4) {
-    const fileTree = {};
-
-    if (!treeData?.tree || !Array.isArray(treeData.tree)) {
-        return fileTree;
-    }
-
-    for (const item of treeData.tree) {
-        if (
-            item.path === "node_modules" ||
-            item.path.startsWith("node_modules/") ||
-            item.path === ".git" ||
-            item.path.startsWith(".git/")
-        ) {
-            continue;
-        }
-
-        const parts = item.path.split("/");
-        
-        if (parts.length > maxDepth) {
-            continue;
-        }
-
-        let current = fileTree;
-
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            const isFile = i === parts.length - 1 && item.type === "blob";
-
-            if (isFile) {
-                current[part] = null;
-            } else {
-                if (!current[part]) {
-                    current[part] = {};
-                }
-                current = current[part];
-            }
-        }
-    }
-
-    return fileTree;
-}
-
-function aggregateScripts(packages) {
-    const scriptsMap = new Map();
-
-    for (const pkg of packages) {
-        const { path, content } = pkg;
-        const packageDir = path === "package.json" ? "(root)" : path.replace("/package.json", "");
-
-        if (content?.scripts) {
-            for (const [name, command] of Object.entries(content.scripts)) {
-                if (!scriptsMap.has(name)) {
-                    scriptsMap.set(name, []);
-                }
-                scriptsMap.get(name).push({ package: packageDir, command });
-            }
-        }
-    }
-
-    return scriptsMap;
+    return gitignoreFiles
+        .filter(file => file.content !== null)
+        .flatMap(file => {
+            const baseDir = file.path.includes("/") ? file.path.slice(0, file.path.lastIndexOf("/")) : "";
+            return parseGitignoreContent(file.content, baseDir);
+        });
 }
 
 export async function runBot(payload) {
@@ -241,9 +162,10 @@ export async function runBot(payload) {
             path: "README.md",
         });
 
-        const content = Buffer.from(data.content, "base64").toString();
         const { packageJsonPaths, requirementsPaths, treeData } = await findProjectFiles(octokit, owner, repo);
-        const fileTree = treeData ? buildFileTree(treeData) : null;
+        const content = Buffer.from(data.content, "base64").toString();
+        const gitignoreRules = treeData ? await fetchGitignoreRules(octokit, owner, repo, treeData) : [];
+        const fileTree = treeData ? buildRemoteFileTree(treeData, gitignoreRules) : null;
         const packages = packageJsonPaths.length > 0
             ? (await Promise.all(packageJsonPaths.map(path => fetchPackageJson(octokit, owner, repo, path))))
                 .filter(pkg => pkg.content !== null)
@@ -255,9 +177,9 @@ export async function runBot(payload) {
         const isNodeProject = packages.length > 0;
         const isPythonProject = !isNodeProject && requirementFiles.length > 0;
         const dependencies = isNodeProject
-            ? aggregateDependencies(packages)
-            : aggregatePythonDependencies(requirementFiles);
-        const scripts = isNodeProject ? aggregateScripts(packages) : new Map();
+            ? collectNodeDependencies(packages)
+            : collectPythonDependencies(requirementFiles);
+        const scripts = isNodeProject ? collectScripts(packages) : new Map();
         const projectType = isNodeProject ? "node" : (isPythonProject ? "python" : "unknown");
         const licenseName = await fetchLicenseName(octokit, owner, repo, treeData);
 
