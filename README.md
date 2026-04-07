@@ -24,7 +24,6 @@ This project uses the following dependencies:
 
 - @octokit/app
 - @octokit/rest
-- dotenv
 - express
 
 ## Folder Structure
@@ -33,10 +32,11 @@ Project structure:
 
 ```
 ├── .gitignore
-├── bin
-│   ├── cli.js
-│   └── README-NPM.md
 ├── LICENSE
+├── README.md
+├── bin
+│   ├── README-NPM.md
+│   └── cli.js
 ├── package-lock.json
 ├── package.json
 ├── scripts
