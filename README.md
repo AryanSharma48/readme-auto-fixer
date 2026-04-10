@@ -2,10 +2,6 @@
 
 blytz is a Node.js application. Add a brief description of its purpose and what problem it solves.
 
-## Description
-
-blytz is a Node.js application. Add a brief description of its purpose and what problem it solves.
-
 ## Installation
 
 Follow these steps to install the project:
@@ -51,9 +47,7 @@ Project structure:
 │   └── server.js
 └── src
     ├── fileTree.js
-    ├── index.js
     ├── processReadme.js
-    ├── projectReader.js
     ├── readmeContext.js
     └── template.js
 ```
@@ -65,3 +59,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## Built By
 
 Built with ❤️ by @Aryan Sharma
+
+## Description
+
+blytz is a Node.js application. Add a brief description of its purpose and what problem it solves.
