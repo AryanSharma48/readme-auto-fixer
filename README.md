@@ -15,6 +15,8 @@ npm install
 You can run the following scripts:
 
 - `npm start`
+- `npm run prepublishOnly`
+- `npm run postpublish`
 
 ## Dependencies
 
@@ -31,13 +33,13 @@ Project structure:
 
 ```
 ├── .gitignore
-├── bin
-│   ├── cli.js
-│   └── README-NPM.md
 ├── LICENSE
+├── README.md
+├── bin
+│   ├── README-NPM.md
+│   └── cli.js
 ├── package-lock.json
 ├── package.json
-├── README.md
 ├── scripts
 │   └── sync-readme.js
 ├── server
