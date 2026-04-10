@@ -2,6 +2,10 @@
 
 blytz is a Node.js application. Add a brief description of its purpose and what problem it solves.
 
+## Description
+
+blytz is a Node.js application. Add a brief description of its purpose and what problem it solves.
+
 ## Installation
 
 Follow these steps to install the project:
